@@ -24,7 +24,7 @@ public class CategoriaResource {
     }
 
     @PostMapping
-    public ResponseEntity<Categoria> criar(@RequestBody Categoria categoria, HttpServletResponse response) {
+    public ResponseEntity<Categoria> criar(@RequestBody Categoria categoria) {
 
         Categoria categoriaSalva = categoriaRepository.save(categoria);
 
