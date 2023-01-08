@@ -1,9 +1,12 @@
 package com.algaworks.algamoneyapi.resource;
 
+import com.algaworks.algamoneyapi.event.RecursoCriadoEvent;
 import com.algaworks.algamoneyapi.model.Categoria;
 import com.algaworks.algamoneyapi.repository.CategoriaRepository;
 import org.apache.coyote.Response;
 import org.hibernate.annotations.GenerationTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,9 @@ public class CategoriaResource {
 
     private final CategoriaRepository repository;
 
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
     public CategoriaResource(CategoriaRepository repository) {
         this.repository = repository;
     }
@@ -38,11 +44,10 @@ public class CategoriaResource {
     @PostMapping
     public ResponseEntity<Categoria> criar(@Valid @RequestBody Categoria categoria, HttpServletResponse response) {
         Categoria categoriaSalva = repository.save(categoria);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{codigo}")
-                .buildAndExpand(categoriaSalva.getCodigo()).toUri();
-        response.setHeader("Location", uri.toASCIIString());
 
-        return ResponseEntity.created(uri).body(categoriaSalva);
+        publisher.publishEvent(new RecursoCriadoEvent(this, response, categoriaSalva.getCodigo()));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaSalva);
     }
 
     @GetMapping("/{codigo}")
